@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Health Habit Tracker 💪</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+  /* ---------- THEME & BASE (UNCHANGED LAYOUT) ---------- */
+  :root{
+    --mint:#e6fbf3; --lav:#f3f7ff; --peach:#fff7f2;
+    --card:#ffffffee; --muted:#22303f;
+    --accent1:#6ee7b7; --accent2:#8b5cf6;
+    --soft-shadow: 0 6px 15px rgba(16,24,40,0.08);
+    --rounded: 14px;
+    --transition: 260ms cubic-bezier(.2,.9,.2,1);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+  margin:0;
+  font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:
+    linear-gradient(135deg, rgba(230,251,243,0.9), rgba(243,247,255,0.9) 50%, rgba(255,247,242,0.9)),
+    url('https://images.unsplash.com/photo-1558611848-73f7eb4001a1?auto=format&fit=crop&w=1400&q=80');
+  background-size:cover;
+  background-attachment:fixed;
+  background-position:center;
+  color:var(--muted);
+  -webkit-font-smoothing:antialiased;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+
+  /* ---------- PREMIUM HEADER (only changed part) ---------- */
+  header{
+  width:100%; max-width:980px;
+  display:flex; justify-content:space-between; align-items:center;
+  background:rgba(255,255,255,0.7);
+  border-radius:16px;
+  padding:18px 24px;
+  backdrop-filter:blur(6px);
+  box-shadow:var(--soft-shadow);
+  border:1px solid rgba(255,255,255,0.6);
+  margin-bottom:14px;
+}
+.brand{display:flex;gap:12px;align-items:center;}
+.logo{
+  width:64px;height:64px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#fff,#f6f7ff);
+  font-weight:800;color:var(--accent2);font-size:20px;
+}
+h1{margin:0;font-size:1.35rem;color:#5b21b6;}
+.subtitle{font-size:0.92rem;opacity:0.95;color:#334155;}
+.header-right small{font-size:0.9rem;}
+
+/* ---------- MAIN APP ---------- */
+.app{width:100%;max-width:980px;display:grid;grid-template-columns:1fr 360px;gap:18px;}
+.panel{background:var(--card);border-radius:var(--rounded);padding:16px;box-shadow:var(--soft-shadow);}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.habit{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:12px;background:rgba(255,255,255,0.9);}
+.emoji{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:26px;background:#fff;}
+.name{font-weight:700;color:#0b1220;}
+.cat{font-size:0.82rem;color:var(--muted);}
+.controls{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+.time-input{width:80px;padding:8px 10px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);}
+.unit-select{padding:8px 10px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);}
+.control-btn{padding:8px 10px;border-radius:10px;border:0;cursor:pointer;font-weight:700;}
+.start-btn{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;}
+.reset-btn{background:#eef2ff;color:#0b1220;}
+.progress-mini{height:8px;width:100%;background:#f0f6f6;border-radius:8px;overflow:hidden;margin-top:10px;}
+.progress-mini>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7af3d9,#9ad0ff);}
+
+/* ---------- STATS ---------- */
+.right-col{display:flex;flex-direction:column;gap:12px;}
+.stat{padding:14px;border-radius:12px;text-align:center;background:var(--card);box-shadow:var(--soft-shadow);}
+.stat h3{margin:0;color:var(--accent2);font-size:0.95rem;}
+.stat p{margin:8px 0 0;font-weight:800;font-size:1.3rem;color:#0b1220;}
+.snapshot{padding:12px;border-radius:12px;background:var(--card);box-shadow:var(--soft-shadow);}
+footer{margin-top:18px;text-align:center;color:#7a2b8f;font-weight:700;}
+
+/* ---------- RESPONSIVE ONLY (Added) ---------- */
+@media (max-width:900px){
+  .app{grid-template-columns:1fr;}
+}
+@media (max-width:600px){
+  header{flex-direction:column;align-items:flex-start;text-align:left;}
+  .brand{width:100%;}
+  .grid{grid-template-columns:1fr;}
+  .controls{flex-direction:row;flex-wrap:wrap;}
+  .logo{width:54px;height:54px;font-size:18px;}
+  h1{font-size:1.15rem;}
+  .subtitle{font-size:0.85rem;}
+}
+@media (max-width:400px){
+  h1{font-size:1rem;}
+  .subtitle{font-size:0.8rem;}
+  .logo{width:46px;height:46px;font-size:16px;}
+  .time-input{width:70px;}
+}
+.hidden {
+  display: none;
+}
+
+#motivation {
+  text-align: center;
+  margin-top: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.motivation-text {
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #4a90e2;
+  opacity: 0;
+  transform: scale(0.8);
+  animation: fadeInScale 2s ease forwards;
+  text-shadow: 0 0 10px rgba(74,144,226,0.6);
+}
+
+/* Fade and scale animation */
+@keyframes fadeInScale {
+  0% {opacity: 0; transform: scale(0.8);}
+  100% {opacity: 1; transform: scale(1);}
+}
+
+/* Confetti animation */
+.confetti::before, .confetti::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-image:
+    radial-gradient(circle, #f94144 3px, transparent 4px),
+    radial-gradient(circle, #f3722c 3px, transparent 4px),
+    radial-gradient(circle, #f9c74f 3px, transparent 4px),
+    radial-gradient(circle, #90be6d 3px, transparent 4px),
+    radial-gradient(circle, #577590 3px, transparent 4px);
+  background-size: 20px 20px;
+  animation: confetti 2.5s ease-in-out forwards;
+}
+
+@keyframes confetti {
+  0% { transform: translateY(-10%) scale(1); opacity: 1; }
+  100% { transform: translateY(100%) scale(1.5); opacity: 0; }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">SH</div>
+    <div>
+      <h1>Smart Health Habit Tracker 💪</h1>
+      <div class="subtitle">Your calm, daily motivator — English voice support</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <small>Only today's timers are stored — reset at midnight</small>
+  </div>
+</header>
+
+<!-- ---------- REST OF ORIGINAL APP (unchanged) ---------- -->
+<div class="app">
+  <section class="panel">
+    <div class="intro">
+      <div class="title">6 Balanced Habits — Start a session</div>
+      <div class="note">Enter value, choose unit (min/sec) → Start. Only one session runs at a time.</div>
+    </div>
+
+    <div class="grid" id="habits-grid"></div>
+
+    <div style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="font-weight:800; color:#0b1220">Today's Progress</div>
+        <div style="font-size:0.9rem; color:var(--muted)" id="progress-summary">0 / 6 • 0%</div>
+      </div>
+      <div id="global-bar" style="height:16px; width:100%; background:#ecf8f6; border-radius:12px; overflow:hidden">
+        <div id="global-fill" style="height:100%; width:0%; background:linear-gradient(90deg,#7af3d9,#9ad0ff); transition:width 500ms cubic-bezier(.2,.9,.2,1)"></div>
+      </div>
+    </div>
+
+    <div class="mot" style="margin-top:14px;">
+      <h2 id="main-quote">“Start small — finish strong.”</h2>
+      <p id="sub-quote">Every minute you invest today grows into strength tomorrow, buddy. 💫</p>
+    </div>
+  </section>
+
+  <aside class="right-col">
+    <div class="stat panel"><h3>Total Habits</h3><p id="stat-total">6</p></div>
+    <div class="stat panel"><h3>Completed Today</h3><p id="stat-done">0</p></div>
+    <div class="snapshot"><div class="title">Timer Snapshot</div><canvas id="progressChart" height="210"></canvas></div>
+  </aside>
+</div>
+
+<footer>🌈 “Buddy, health is built daily — small wins every day.”</footer>
+
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <h2 id="modal-title">Great job!</h2>
+    <p id="modal-body">You completed the session — well done, buddy!</p>
+    <div style="margin-top:12px;"><button class="btn-primary" id="modal-ok">Awesome ✨</button></div>
+  </div>
+</div>
+
+<audio id="bell" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.wav" preload="auto"></audio>
+
+<script>
+(() => {
+  // Config: habits (Stretching included)
+  const DEFAULTS = [
+    { id:'h1', name:'Morning Yoga', icon:'🧘', category:'Mind', defaultMin:10 },
+    { id:'h2', name:'Meditation', icon:'🕯️', category:'Mind', defaultMin:8 },
+    { id:'h3', name:'Jogging', icon:'🏃', category:'Exercise', defaultMin:15 },
+    { id:'h4', name:'Reading', icon:'📚', category:'Mind', defaultMin:20 },
+    { id:'h5', name:'Stretching', icon:'🤸', category:'Exercise', defaultMin:5 },
+    { id:'h6', name:'Sleep Prep', icon:'🌙', category:'Rest', defaultMin:10 }
+  ];
+
+  const LS_KEY = 'dhb_v1';
+  const LS_DATE = 'dhb_date_v1';
+  const grid = document.getElementById('habits-grid');
+  const statTotal = document.getElementById('stat-total');
+  const statDone = document.getElementById('stat-done');
+  const globalFill = document.getElementById('global-fill');
+  const progressSummary = document.getElementById('progress-summary');
+  const mainQuote = document.getElementById('main-quote');
+  const subQuote = document.getElementById('sub-quote');
+  const bell = document.getElementById('bell');
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalBody = document.getElementById('modal-body');
+  const modalOk = document.getElementById('modal-ok');
+  const chartCtx = document.getElementById('progressChart').getContext('2d');
+  let barChart;
+
+  function todayStr(){ return new Date().toDateString(); }
+
+  // Load or reset state for today
+  function loadState(){
+    const savedDate = localStorage.getItem(LS_DATE);
+    if (savedDate !== todayStr()){
+      const s = DEFAULTS.map(h => ({
+        id: h.id, name: h.name, icon: h.icon, category: h.category,
+        completed: false, goalSeconds: h.defaultMin*60, elapsed: 0, running:false,
+        spokenHalf:false, spokenLastMin:false
+      }));
+      localStorage.setItem(LS_KEY, JSON.stringify(s));
+      localStorage.setItem(LS_DATE, todayStr());
+      return s;
+    } else {
+      try {
+        const s = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+        if (!s || !Array.isArray(s) || s.length !== DEFAULTS.length) throw 'bad';
+        return s.map((h,i) => ({
+          id: h.id || DEFAULTS[i].id,
+          name: h.name || DEFAULTS[i].name,
+          icon: h.icon || DEFAULTS[i].icon,
+          category: h.category || DEFAULTS[i].category,
+          completed: !!h.completed,
+          goalSeconds: typeof h.goalSeconds === 'number' ? h.goalSeconds : DEFAULTS[i].defaultMin*60,
+          elapsed: typeof h.elapsed === 'number' ? h.elapsed : 0,
+          running:false,
+          spokenHalf: !!h.spokenHalf,
+          spokenLastMin: !!h.spokenLastMin
+        }));
+      } catch(e){
+        const s = DEFAULTS.map(h => ({
+          id: h.id, name: h.name, icon: h.icon, category: h.category,
+          completed:false, goalSeconds: h.defaultMin*60, elapsed:0, running:false, spokenHalf:false, spokenLastMin:false
+        }));
+        localStorage.setItem(LS_KEY, JSON.stringify(s));
+        return s;
+      }
+    }
+  }
+
+  let state = loadState();
+  let intervals = {};
+
+  // VOICE: prefer male English voice; fallback gracefully
+  let engMaleVoice = null;
+  function pickEnglishMaleVoice(){
+    const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+    if (!voices || voices.length === 0) return;
+    // prefer en-US male, en-IN male, else any en male & fallback
+    engMaleVoice = voices.find(v => /en-?us/i.test(v.lang) && /male/i.test(v.name)) ||
+                   voices.find(v => /en-?in/i.test(v.lang) && /male/i.test(v.name)) ||
+                   voices.find(v => /en-?us/i.test(v.lang)) ||
+                   voices.find(v => /en-?in/i.test(v.lang)) ||
+                   voices.find(v => /male/i.test(v.name)) ||
+                   voices[0];
+  }
+  window.speechSynthesis.onvoiceschanged = pickEnglishMaleVoice;
+  pickEnglishMaleVoice();
+
+  function speakEnglish(text){
+    try{
+      if (!window.speechSynthesis) return;
+      const u = new SpeechSynthesisUtterance(text);
+      engMaleVoice = engMaleVoice || (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices()[0] : null);
+      if (engMaleVoice) u.voice = engMaleVoice;
+      u.lang = (engMaleVoice && engMaleVoice.lang) ? engMaleVoice.lang : 'en-US';
+      u.rate = 1; u.pitch = 1;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch(e){ console.warn('TTS error', e); }
+  }
+
+  // English voice cues (motivational)
+  function voiceCue(stage, habit){
+    const name = habit.name;
+    const phrases = {
+      start: [
+        `Let's go buddy — starting ${name}. Stay focused and keep your pace.`,
+        `Starting ${name} now. You got this!`
+      ],
+      half: [
+        `Great progress — you're halfway through ${name}, keep it up!`,
+        `Halfway there buddy — stay strong!`
+      ],
+      lastmin: [
+        `Final minute — push through, you're almost done!`,
+        `Last minute left — give it your best!`
+      ],
+      complete: [
+        `Fantastic! You completed ${name}. Well done buddy!`,
+        `Amazing job! ${name} finished — be proud!`
+      ],
+      pause: [
+        `${name} paused. Take a breath and resume when ready.`,
+        `Paused — rest briefly then continue.`
+      ],
+      resume: [
+        `Resuming ${name} — keep your focus.`,
+        `Back on — let's go finish strong.`
+      ]
+    };
+    const pool = phrases[stage] || [""];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function saveState(){
+    const toSave = state.map(s => ({
+      id:s.id, name:s.name, icon:s.icon, category:s.category,
+      completed:!!s.completed, goalSeconds:s.goalSeconds, elapsed:s.elapsed,
+      spokenHalf:!!s.spokenHalf, spokenLastMin:!!s.spokenLastMin
+    }));
+    localStorage.setItem(LS_KEY, JSON.stringify(toSave));
+    localStorage.setItem(LS_DATE, todayStr());
+  }
+
+  function formatTime(sec){
+    const m = Math.floor(sec/60), s = Math.floor(sec%60);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function renderHabits(){
+    grid.innerHTML = '';
+    state.forEach(h => {
+      const li = document.createElement('div');
+      li.className = `habit ${h.completed ? 'done' : ''}`;
+      li.innerHTML = `
+        <div class="emoji">${h.icon}</div>
+        <div class="hmeta">
+          <div style="display:flex; justify-content:space-between;">
+            <div>
+              <div class="name">${h.name}</div>
+              <div class="cat">${h.category}</div>
+            </div>
+            <div style="text-align:right; color:#0b1220; font-weight:800;">
+              <div id="${h.id}-time">${formatTime(h.elapsed)} / ${formatTime(h.goalSeconds)}</div>
+            </div>
+          </div>
+          <div class="controls">
+            <input id="${h.id}-value" class="time-input" type="number" min="1" step="1" value="${Math.round(h.goalSeconds/60)}" aria-label="value">
+            <select id="${h.id}-unit" class="unit-select" aria-label="unit">
+              <option value="min">min</option>
+              <option value="sec">sec</option>
+            </select>
+            <button id="${h.id}-start" class="control-btn start-btn">${h.running ? 'Pause' : 'Start'}</button>
+            <button id="${h.id}-reset" class="control-btn reset-btn">Reset</button>
+          </div>
+          <div class="progress-mini"><i id="${h.id}-bar" style="width:${Math.min(100, Math.round((h.elapsed/h.goalSeconds)*100))}%;"></i></div>
+        </div>`;
+
+      grid.appendChild(li);
+
+      // Elements
+      const valEl = document.getElementById(`${h.id}-value`);
+      const unitEl = document.getElementById(`${h.id}-unit`);
+      const startBtn = document.getElementById(`${h.id}-start`);
+      const resetBtn = document.getElementById(`${h.id}-reset`);
+
+      // initial unit/value
+      unitEl.value = (h.goalSeconds % 60 === 0) ? 'min' : 'sec';
+      valEl.value = (unitEl.value === 'min') ? Math.round(h.goalSeconds/60) : h.goalSeconds;
+
+      valEl.onchange = () => {
+        const v = Math.max(1, Math.round(Number(valEl.value) || 1));
+        if (unitEl.value === 'min') h.goalSeconds = v * 60; else h.goalSeconds = v;
+        h.spokenHalf = false; h.spokenLastMin = false;
+        if (h.elapsed >= h.goalSeconds){ h.elapsed = h.goalSeconds; h.completed = true; }
+        saveState(); renderHabits();
+      };
+
+      unitEl.onchange = () => {
+        const v = Math.max(1, Math.round(Number(valEl.value) || 1));
+        if (unitEl.value === 'min') h.goalSeconds = v * 60; else h.goalSeconds = v;
+        h.spokenHalf = false; h.spokenLastMin = false;
+        if (h.elapsed >= h.goalSeconds){ h.elapsed = h.goalSeconds; h.completed = true; }
+        saveState(); renderHabits();
+      };
+
+      startBtn.onclick = () => {
+        // pause others
+        state.forEach(x => { if (x.id !== h.id && x.running) { x.running = false; stopInterval(x.id); const sBtn = document.getElementById(`${x.id}-start`); if (sBtn) sBtn.textContent = 'Start'; }});
+        if (!h.running){
+          if (h.completed && h.elapsed >= h.goalSeconds){ h.elapsed = 0; h.completed = false; h.spokenHalf = false; h.spokenLastMin = false; }
+          h.running = true;
+          startInterval(h.id);
+          startBtn.textContent = 'Pause';
+          speakEnglish(voiceCue('start', h));
+        } else {
+          h.running = false;
+          stopInterval(h.id);
+          startBtn.textContent = 'Start';
+          speakEnglish(voiceCue('pause', h));
+        }
+        saveState(); renderHabits();
+      };
+
+      resetBtn.onclick = () => {
+        h.running = false; stopInterval(h.id);
+        h.elapsed = 0; h.completed = false; h.spokenHalf = false; h.spokenLastMin = false;
+        const sBtn = document.getElementById(`${h.id}-start`); if (sBtn) sBtn.textContent = 'Start';
+        saveState(); renderHabits();
+      };
+    });
+    updateStatsAndChart();
+  }
+
+  function startInterval(id){
+    if (intervals[id]) return;
+    const h = state.find(x => x.id === id);
+    if (!h) return;
+    intervals[id] = setInterval(() => {
+      h.elapsed += 1;
+      if (!h.spokenHalf && h.elapsed >= Math.floor(h.goalSeconds/2)){
+        h.spokenHalf = true; speakEnglish(voiceCue('half', h));
+      }
+      if (!h.spokenLastMin && (h.goalSeconds - h.elapsed) <= 60 && (h.goalSeconds - h.elapsed) > 0){
+        h.spokenLastMin = true; speakEnglish(voiceCue('lastmin', h));
+      }
+      if (h.elapsed >= h.goalSeconds){
+        h.elapsed = h.goalSeconds; h.completed = true; h.running = false;
+        stopInterval(id);
+        speakEnglish(voiceCue('complete', h));
+        try{ bell.currentTime = 0; bell.play().catch(()=>{}); }catch(e){}
+        setTimeout(()=> confetti({ particleCount: 120, spread: 100, origin:{ y: 0.6 } }), 220);
+        showModal(`${h.name} complete!`, `You completed ${h.name} — great effort buddy!`);
+      }
+      const timeEl = document.getElementById(`${id}-time`);
+      const barEl = document.getElementById(`${id}-bar`);
+      if (timeEl) timeEl.textContent = `${formatTime(h.elapsed)} / ${formatTime(h.goalSeconds)}`;
+      if (barEl) barEl.style.width = Math.min(100, Math.round((h.elapsed/h.goalSeconds)*100)) + '%';
+      saveState(); updateStatsAndChart();
+      renderHabits();
+    }, 1000);
+  }
+
+  function stopInterval(id){ if (intervals[id]){ clearInterval(intervals[id]); delete intervals[id]; } }
+  function stopAll(){ Object.keys(intervals).forEach(k => stopInterval(k)); }
+
+  function updateStatsAndChart(){
+    const total = state.length;
+    const done = state.filter(s => s.completed).length;
+    statTotal.textContent = total; statDone.textContent = done;
+    const pct = total ? Math.round((done/total)*100) : 0;
+    const gf = document.getElementById('global-fill'); if (gf) gf.style.width = pct + '%';
+    progressSummary.textContent = `${done} / ${total} • ${pct}%`;
+
+    const labels = state.map(s => s.name);
+    const data = state.map(s => Math.round((Math.min(s.elapsed,s.goalSeconds)/s.goalSeconds)*100));
+    if (barChart) barChart.destroy();
+    barChart = new Chart(chartCtx, {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'% done', data, backgroundColor: labels.map(()=> 'rgba(122,231,255,0.95)'), borderRadius:6 }] },
+      options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } }
+    });
+
+    if (done === total && total>0){
+      mainQuote.textContent = "Great! All sessions completed ✨";
+      subQuote.textContent = "You crushed your goals today, buddy — take pride!";
+    } else if (done > 0){
+      mainQuote.textContent = "Nice progress — keep momentum!";
+      subQuote.textContent = "Small wins add up. One more round?";
+    } else {
+      mainQuote.textContent = "Start small — finish strong.";
+      subQuote.textContent = "Every minute you move today grows into strength tomorrow, buddy.";
+    }
+  }
+
+  function showModal(title, body){
+    modalTitle.textContent = title; modalBody.textContent = body; modal.classList.add('show'); modal.setAttribute('aria-hidden','false');
+  }
+  modalOk.onclick = () => { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); };
+
+  function makeFocusable(){
+    document.querySelectorAll('.habit').forEach(el => {
+      el.tabIndex = 0;
+      el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { const btn = el.querySelector('.start-btn'); if (btn) btn.click(); e.preventDefault(); } };
+    });
+  }
+
+  // initial render
+  renderHabits();
+
+  // reset at midnight
+  setInterval(() => {
+    if (localStorage.getItem(LS_DATE) !== todayStr()){
+      stopAll();
+      state = DEFAULTS.map(h => ({ id:h.id, name:h.name, icon:h.icon, category:h.category, completed:false, goalSeconds:h.defaultMin*60, elapsed:0, running:false, spokenHalf:false, spokenLastMin:false }));
+      saveState(); renderHabits();
+      setTimeout(()=> confetti({ particleCount:60, spread:70, origin:{ y:0.6 } }), 300);
+    }
+  }, 60000);
+
+  window.addEventListener('beforeunload', () => { stopAll(); saveState(); });
+
+  // expose
+  window.DHB = () => ({ state, today: todayStr() });
+})();
+function checkAllCompleted() {
+  const checkboxes = document.querySelectorAll('.habit-checkbox');
+  const allDone = Array.from(checkboxes).every(cb => cb.checked);
+
+  if (allDone) {
+    // Stop any current speech
+    window.speechSynthesis.cancel();
+
+    // Motivational message
+    const msg = new SpeechSynthesisUtterance(
+      "Wow buddy! You did all your exercises today. I'm proud of you! Keep this energy every day, and you'll see amazing changes. Stay strong, stay consistent!"
+    );
+
+    msg.lang = "en-IN";
+    msg.pitch = 1;
+    msg.rate = 1;
+    msg.volume = 1;
+    speechSynthesis.speak(msg);
+
+    // Optional: small confetti effect 🎉 (soft)
+    const confettiDiv = document.createElement("div");
+    confettiDiv.innerHTML = "🎉 Great job buddy! 🎉";
+    confettiDiv.style.position = "fixed";
+    confettiDiv.style.bottom = "20px";
+    confettiDiv.style.left = "50%";
+    confettiDiv.style.transform = "translateX(-50%)";
+    confettiDiv.style.background = "linear-gradient(90deg, #7F00FF, #E100FF)";
+    confettiDiv.style.color = "#fff";
+    confettiDiv.style.padding = "10px 20px";
+    confettiDiv.style.borderRadius = "25px";
+    confettiDiv.style.fontFamily = "Poppins, sans-serif";
+    confettiDiv.style.boxShadow = "0 0 15px rgba(0,0,0,0.2)";
+    document.body.appendChild(confettiDiv);
+
+    setTimeout(() => confettiDiv.remove(), 5000);
+  }
+}
+
+// 👇 Call function on every checkbox change
+document.querySelectorAll('.habit-checkbox').forEach(cb => {
+  cb.addEventListener('change', checkAllCompleted);
+});
+if (completedAllExercises) {
+  document.getElementById("motivation").classList.remove("hidden");
+}
+
+</script>
+<div id="motivation" class="hidden">
+  <div class="confetti"></div>
+  <h2 class="motivation-text">🎯 You did it! Stay strong and keep moving forward 💪</h2>
+</div>
+</body>
+</html>
